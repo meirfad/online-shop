@@ -1,5 +1,6 @@
 package com.example.demoshop.product;
 
+import com.example.demoshop.exception.ProductNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ public class ProductService {
     }
 
     public Product getProduct(Long id) {
-        return productRepository.findById(id).orElseThrow(() -> new IllegalStateException("Product " + id + " does not exists."));
+        return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException("Product " + id + " does not exists."));
     }
 
     public void addProduct(Product product) {
@@ -42,14 +43,14 @@ public class ProductService {
         boolean exists = productRepository.existsById(id);
 
         if(!exists) {
-            throw new IllegalStateException("Product with id " + id + ", does not exist.");
+            throw new ProductNotFoundException("Product with id " + id + ", does not exist.");
         }
         productRepository.deleteById(id);
     }
 
     @Transactional
     public void updateProduct(Long id, Product updatedProduct) {
-        Product product = productRepository.findById(id).orElseThrow(() -> new IllegalStateException("Student " + id + " does not exists."));
+        Product product = productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException("Product " + id + " does not exists."));
         String name = updatedProduct.getName();
         String description = updatedProduct.getDescription();
         Double price = updatedProduct.getPrice();

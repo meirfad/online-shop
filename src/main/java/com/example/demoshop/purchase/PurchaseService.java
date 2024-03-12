@@ -1,5 +1,7 @@
 package com.example.demoshop.purchase;
 
+import com.example.demoshop.exception.ProductNotFoundException;
+import com.example.demoshop.exception.PurchaseNotFoundException;
 import com.example.demoshop.product.Product;
 import com.example.demoshop.product.ProductDTO;
 import com.example.demoshop.product.ProductService;
@@ -37,7 +39,7 @@ public class PurchaseService {
 
     @Transactional
     public PurchaseDTO getPurchase(Long purchaseId) {
-        Purchase purchase = purchaseRepository.findById(purchaseId).orElseThrow(() -> new IllegalStateException("Error"));
+        Purchase purchase = purchaseRepository.findById(purchaseId).orElseThrow(() -> new PurchaseNotFoundException("Purchase with id " + purchaseId + " doesn't exist." ));
         return mapToDTO(purchase);
     }
 
@@ -54,14 +56,14 @@ public class PurchaseService {
 
     public User getPurchaseUser(Long purchaseId) {
         Purchase purchase = purchaseRepository.
-                findById(purchaseId).orElseThrow(() ->  new IllegalStateException("Error"));
+                findById(purchaseId).orElseThrow(() ->  new PurchaseNotFoundException("Purchase with id: " + purchaseId + " doesn't exist."));
 
         return purchase.getUser();
     }
 
     public Product getPurchaseProduct(Long purchaseId) {
         Purchase purchase = purchaseRepository.
-                findById(purchaseId).orElseThrow(() ->  new IllegalStateException("Error"));
+                findById(purchaseId).orElseThrow(() ->  new PurchaseNotFoundException("Purchase with id: " + purchaseId + " doesn't exist."));
 
         return purchase.getProduct();
     }

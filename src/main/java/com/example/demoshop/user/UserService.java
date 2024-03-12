@@ -1,4 +1,6 @@
 package com.example.demoshop.user;
+import com.example.demoshop.exception.EmailAlreadyExistsException;
+import com.example.demoshop.exception.UserNotFoundException;
 import com.example.demoshop.product.Product;
 import com.example.demoshop.product.ProductRepository;
 import com.example.demoshop.product.ProductService;
@@ -8,6 +10,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,32 +32,33 @@ public class UserService {
     }
 
     public User getUserById(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new IllegalStateException("User with id " + id + " doesn't exist"));
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User with id " + id + " doesn't exist"));
         return user;
     }
 
     public List<Product> getShoppingList(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User with id " + id + " doesn't exist"));
         return user.getShoppingList().stream()
                 .map(productId -> productService.getProduct(productId)).collect(Collectors.toList());
     }
 
     public User addUser(User user) {
-        try {
-            return userRepository.save(user);
-        } catch (DataIntegrityViolationException e) {
-            throw new RuntimeException("Email already exists");
+        Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
+        if (existingUser.isPresent()) {
+            throw new EmailAlreadyExistsException("A user with the same email already exists");
         }
+
+        return userRepository.save(user);
     }
 
     public void deleteUser(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalStateException("A user with this email doesn't exist."));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new EmailAlreadyExistsException("A user with this email doesn't exist."));
         userRepository.delete(user);
     }
 
     @Transactional
     public void updateUser(Long userId, User updatedUser) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalStateException("Product with id " + userId + " doesn't exist"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User with id " + userId + " doesn't exist"));
         String email = updatedUser.getEmail();
         List<Long> updatedShoppingList = updatedUser.getShoppingList();
 
@@ -66,7 +70,7 @@ public class UserService {
     }
 
     public User addProductToShoppingList(Long userId, Long productId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User with id" + userId + " doesn't exist"));
         user.getShoppingList().add(productId);
         return userRepository.save(user);
     }
